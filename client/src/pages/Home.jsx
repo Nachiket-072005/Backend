@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Navbar from "./Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,10 +6,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const Home = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [todos, setTodos] = useState([]);
 
   const todoHandler = async () => {
     try {
@@ -24,6 +32,7 @@ const Home = () => {
 
       if (res.data.success) {
         toast.success(res.data.message);
+        setTodos([...todos, res.data.todo]);
         setDescription("");
         setTitle("");
       }
@@ -31,6 +40,22 @@ const Home = () => {
       toast.error(error.response.data.message);
     }
   };
+
+  useEffect(() => {
+    const fetchTodos = async () => {
+      try {
+        const res = await axios.get("http://localhost:8000/api/v1/todo", {
+          withCredentials: true,
+        });
+        if (res.data.success) {
+          setTodos(res.data.todos);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchTodos();
+  }, []);
   return (
     <div>
       <div>
@@ -53,6 +78,21 @@ const Home = () => {
           </div>
         </div>
         <Button onClick={todoHandler}>Add Task</Button>
+      </div>
+
+      <div className="grid grid-cols-5 gap-2 mt-5 mx-auto">
+        {todos.map((todo) => (
+          <Card
+            key={todo._id}
+            className="bg-gray-800 text-white
+          "
+          >
+            <CardHeader>
+              <CardTitle>{todo.title}</CardTitle>
+              <CardDescription>{todo.description}</CardDescription>
+            </CardHeader>
+          </Card>
+        ))}
       </div>
     </div>
   );
