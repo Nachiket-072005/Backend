@@ -1,21 +1,74 @@
-import React, { useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import dp from "../assets/profile.jpeg";
+import { dataContext } from "../context/UserContext";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function Signup() {
+  let { serverUrl } = useContext(dataContext);
+  let navigate = useNavigate();
+  let file = useRef(null);
   const [firstName, setFirstName] = useState(null);
   const [lastName, setLastName] = useState(null);
   const [username, setUsername] = useState(null);
   const [email, setEmail] = useState(null);
   const [password, setPassword] = useState(null);
 
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    try {
+      let formData = new FormData();
+      let data = await axios.post(
+        `${serverUrl}/api/signup`,
+        {
+          firstName,
+          lastName,
+          username,
+          email,
+          password,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      console.log("Signup successful:", data);
+    } catch (error) {
+      console.log("Error during signup:", error);
+    }
+  };
+
+  let [frontendImage, setFrontendImage] = useState(dp);
+  let [backendImage, setBackendImage] = useState(null);
+
+  const handleImage = (e) => {
+    let file = e.target.files[0];
+    setBackendImage(file);
+    let image = URL.createObjectURL(file);
+    setFrontendImage(image);
+  };
+
   return (
     <div className="w-full h-[100vh] bg-black flex items-center justify-center">
       <div className="w-[90%] max-w-[500px] h-[600px] bg-[#141f1f] rounded flex flex-col justify-center items-center gap-[20px] p-4">
         <h1 className="text-white text-[20px] font-semibold">Sign Up</h1>
-        <form className="w-[100%] flex flex-col items-center justify-center gap-[20px]">
+        <form
+          className="w-[100%] flex flex-col items-center justify-center gap-[20px]"
+          onSubmit={handleSignUp}
+        >
+          <input type="file" hidden ref={file} onChange={handleImage} />
           <div className="w-[100px] h-[100px] rounded-full bg-white overflow-hidden relative border-2 border-gray-300 cursor-pointer">
-            <img src={dp} alt="Profile" className="w-[100%] h-[100%]" />
-            <div className="absolute w-[100%] h-[100%] bg-black top-0 opacity-0 hover:opacity-50 flex items-center justify-center text-white text-[30px] font-bold cursor-pointer">
+            <img
+              src={frontendImage}
+              alt="Profile"
+              className="w-[100%] h-[100%]"
+            />
+            <div
+              className="absolute w-[100%] h-[100%] bg-black top-0 opacity-0 hover:opacity-50 flex items-center justify-center text-white text-[30px] font-bold cursor-pointer"
+              onClick={() => {
+                file.current.click();
+              }}
+            >
               +
             </div>
           </div>
@@ -60,6 +113,14 @@ function Signup() {
           <button className="bg-[#07c7e4] text-black px-[10px] py-[5px] rounded-lg">
             Sign Up
           </button>
+
+          <p
+            className="text-white cursor-pointer"
+            onClick={() => navigate("/login")}
+          >
+            Already have an account?{" "}
+            <span className="text-[#07c7e4] ">Login</span>
+          </p>
         </form>
       </div>
     </div>

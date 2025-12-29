@@ -11,6 +11,9 @@ export const signUp = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    // let profileImageUrl;
+    console.log(req.file);
+    
     // Check if user already exists
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
