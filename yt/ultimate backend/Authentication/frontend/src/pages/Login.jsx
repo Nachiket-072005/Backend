@@ -4,7 +4,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 function Login() {
-  let { serverUrl } = useContext(dataContext);
+  let { serverUrl, userData, setUserData, getUserData } =
+    useContext(dataContext);
   let navigate = useNavigate();
   const [email, setEmail] = useState(null);
   const [password, setPassword] = useState(null);
@@ -12,7 +13,7 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      let data = await axios.post(
+      let { data } = await axios.post(
         `${serverUrl}/api/login`,
         {
           email,
@@ -22,6 +23,9 @@ function Login() {
           withCredentials: true,
         }
       );
+      await getUserData();
+      setUserData(data.user);
+      navigate("/");
 
       console.log("Login successful:", data);
     } catch (error) {

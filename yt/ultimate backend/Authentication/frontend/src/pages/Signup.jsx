@@ -5,7 +5,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 function Signup() {
-  let { serverUrl } = useContext(dataContext);
+  let { serverUrl, userData, setUserData, getUserData } =
+    useContext(dataContext);
   let navigate = useNavigate();
   let file = useRef(null);
   const [firstName, setFirstName] = useState(null);
@@ -18,23 +19,28 @@ function Signup() {
     e.preventDefault();
     try {
       let formData = new FormData();
-      let data = await axios.post(
-        `${serverUrl}/api/signup`,
-        {
-          firstName,
-          lastName,
-          username,
-          email,
-          password,
+      formData.append("firstName", firstName);
+      formData.append("lastName", lastName);
+      formData.append("username", username);
+      formData.append("email", email);
+      formData.append("password", password);
+      if (backendImage) {
+        formData.append("profileImage", backendImage);
+      }
+      let { data } = await axios.post(`${serverUrl}/api/signup`, formData, {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "multipart/form-data",
         },
-        {
-          withCredentials: true,
-        }
-      );
+      });
+      await getUserData();
+      setUserData(data.user);
+      navigate("/");
 
       console.log("Signup successful:", data);
     } catch (error) {
       console.log("Error during signup:", error);
+      alert(error.response.data.message);
     }
   };
 

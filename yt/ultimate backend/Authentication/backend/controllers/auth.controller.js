@@ -1,6 +1,7 @@
 import { generateToken } from "../config/token.js";
 import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
+import uploadImageOnCloudinary from "../config/cloudinary.js";
 
 export const signUp = async (req, res) => {
   try {
@@ -11,9 +12,11 @@ export const signUp = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // let profileImageUrl;
-    console.log(req.file);
-    
+    let profileImageUrl;
+    if (req.file) {
+      profileImageUrl = await uploadImageOnCloudinary(req.file.path);
+    }
+
     // Check if user already exists
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
@@ -29,6 +32,7 @@ export const signUp = async (req, res) => {
       email,
       username,
       password: hashPassword,
+      profileImage: profileImageUrl || null,
     });
 
     let token = generateToken({ id: newUser._id });
@@ -47,6 +51,7 @@ export const signUp = async (req, res) => {
         lastName,
         email,
         username,
+        profileImage: profileImageUrl || null,
       },
     });
   } catch (error) {
@@ -93,6 +98,7 @@ export const login = async (req, res) => {
         lastName: existingUser.lastName,
         email: existingUser.email,
         username: existingUser.username,
+        profileImage: existingUser.profileImage, 
       },
     });
   } catch (error) {
@@ -108,6 +114,23 @@ export const logout = async (req, res) => {
       sameSite: "strict",
     });
     return res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const getUserData = async (req, res) => {
+  try {
+    let userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    let user = await User.findById(userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({ user });
   } catch (error) {
     return res.status(500).json({ message: "Internal Server Error" });
   }
